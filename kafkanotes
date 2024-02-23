@@ -1,0 +1,600 @@
+Apache Kafka 
+
+   Open Source
+
+   Distributed  - it is bound to be highly scable [Horizontal scalability]
+   
+   
+   Event Streaming and  Messaging System
+
+
+What cases?
+
+    Microservices architecture? [Application Architecture]
+    Distributed Systems [Infrastructure architecture]
+
+   Monolithic architecture
+   Client Server System
+
+ In distributed systems, microservices [applications & services ] are 
+ deployed at a various places in a loosely coupled manner.
+
+ but logically they are interconnected? - Yes
+
+ There must be C O M M U N I C A T I O N  between the services ? - Yes
+
+ is it synchronous or asynchronous - Asychronous approach
+
+ If this case ? we need a medium that receives the message,systematically hold the message
+and delivers it to the subscriber[ service that need to get the message] whenever
+it is ready
+
+ this medium that is designed to hold the messages and handles the messages
+ from the published and delivers the messages to the subscriber
+ is what we refer as Messaging system/ event streaming system/message broker.
+
+ Messaging Systems - INTEGRATION
+
+ ---------------------------------------------------------------------------
+
+  Order --? {order service}(publisher)
+        {orderid, name, price, invoice amt}  ->message system(kafka) --- {email service} (subscriber)-> {customer}
+
+         {order service} (publisher)
+         {orderid,name,price,invoice amt} -> message System[Kafka](topic)->  (streaming-pipeline)  -> {topic}        ->(XML) 
+{order DB Service}->DB
+   
+   ----------------------------------------------
+
+
+   1. Kafka is a distributed event streaming and messaging sytem
+
+   Messaging system? -
+
+     Temporarily hold/store messages in Data Structure - (topic/queue)
+
+     point to point - Queue
+     one/many publisher - one/many subscriber - Topic
+
+     In kafka - The Structure that holds the messages is Only Topic
+
+     Kafka messaging system - it is a collection of topics
+
+   Architecture?
+
+       it is a distributed system, 
+       it uses a group of nodes/servers/members to hold the topics
+       there is no master /slave setup in kafka, every node is considered equal in terms of functionality
+
+       In kafka architecture, the server/node is called a broker
+
+       a kafka distributed system is a called as  Kafka Cluster
+
+       -------------------------------------------------------------------------------
+
+Terms
+----------
+
+      Cluster -   Collection of Brokers
+      Broker - an individual node/member/server in the cluster
+      Topic - is a structure/unit in which messages are stored
+
+      Producer - The program/component that publishes the message to the topic
+      Consumer - The program/component that subscribes/receives message from the topic
+
+      Cluster State/ Details -  Two choices
+                   1. Zookeeper -(zookeeper itself is distributed)
+                   2. Kakfa itself can manage the cluster using storage
+
+
+      Partition 
+
+      ---------------------------------------------------------------------------------
+
+      Cluster State? - there is no master/slave architecture in kafka
+      but there must be a mechanism to know the number of brokers thats
+      are running or part of the cluster and their state
+
+      initially Kafka used to tackle this with help of another distributed
+      cluster management/monitoring system called apache zookeeper
+
+      if broker1 starts , it advertises itself to zookeeper and zookeeper keeps track of
+      the broker1 and broker1 will try to get the cluster information from zookeeper
+
+      similary if broker starts, it also advertises itslef to zookeeper and gets
+      info about other nodes and try reachout other brokers and the redistribution
+      kafka topics will take place
+
+
+
+broker1 (server1) zookeeper node (server1), broker2 (server2) zookeeper node(server2) ,broker1(server3)
+
+one node zookeeper
+
+two node zookeeper
+
+or
+
+you can deploy zookeeper nodes saperately in server 4 and server5
+
+----------------------------
+
+Scalability -
+
+ Horizontal  Scalability
+
+
+       Increasing the number of brokers
+
+----------------------------------------------------------
+
+Partition
+---------
+
+ Cluster-> Collection of brokers
+
+ Topic -> unit that stores messages
+      [For the messages to be available always/reliable always] - messages need to be replicated
+
+
+
+ a Topic is a storage that holds messages usually divided in one or more partitions
+
+ Example: a topic called micromessages is using 3 partitions
+   meaning: the data of the topic will be split into three parts , which each part
+   might be holding some messages
+
+      example: a topic called emailinfo is using 1 partition
+
+      meaning: all the messages is stored in only one partition
+       disadvantage: more the messages  , it becomes hard to replicate and lot
+       of wastage of data,because all the messages need to be replicated
+
+
+if there are 3 partitions
+
+Brokers -b1, b2,b3
+Topic -Topic1 - (p1,p2,p3)
+
+ReplicationFactor - number of replications of the partion
+
+if replication factor is 2
+
+
+broker1-  (p1,p2)
+broker2 - (p1,p3)
+broker3 - (p2,p3)
+
+in the above distribution , you could see each partition is maintaining two replications
+even if one of the broker fails it ensures that all three partitions are avaliable
+
+
+if broker 3 fails, redistribution of the partitions to ensure the replication factor 2  happens
+
+broker1 - (p1,p2,p3)
+broker2 - (p1,p2,p3)
+
+
+Eventhough you have only broker still your topic can have three partitions
+
+but you cannot replication factor more than one , because there is only broker
+
+
+Topic has a physical storage
+
+   that is the messages are stored in the individual brokers
+
+   the storage is divided into partitions as per the topic specification
+
+   topic restribution makes the topic messages distribute messages across brokers
+
+
+
+
+
+user -> Mysql>{mysql connector} ---> [topic] --> {mongodb connector} -> Mongodb
+
+Data pipelines
+-----------------------------------------------------------------------------------
+
+
+Cluster
+-------
+
+Multi node cluster
+
+  1.Zookeeper
+  2 Without Zookeeper
+
+
+  Zookeeper based multi node cluster:
+  ------------------------------------
+
+  Do we have multiple servers [VMs]?
+
+     One server itself can be used to create multiple brokers
+     though not recommended, for practice requirements
+     we can emulate multiple brokers in one server itself
+     by using different host+port combination
+
+
+     if there are multiple vms
+
+     ip address 1 + 9092
+     ip addess of vm2 + 9092
+     ip address of vm3 + 9092
+
+     ----------------------
+
+     if there is only one system
+
+     ip address1+ 9092
+     ip appdress1+ 9093
+     ip address1+9094
+
+
+     In the same system we deploy zookeeper as one node 
+
+     ----------------------
+
+     Exercise1
+     ----------
+
+       Zookeeper based multi broker cluster
+
+       Zookeeper : 1 node
+       Kafka - 3 brokers
+
+       Software: kafka- binary
+
+       Zookeeper and Kafka Brokers setup
+       ---------------------------------
+
+       Zookeeper setup
+
+       1 node zookeeper
+
+       zookeeper server runs based on configuration provided
+       in a file called zookeeper.properties
+
+       zookeeper will maintain the state of cluster in the
+       storage in tha path that specify as zookeeper path
+
+
+       Broker setup
+       ------------
+
+       Each broker is started based on the configuration
+       provided in a file called as server.properties
+
+         What does the file contain?
+
+              * It contains broker id
+              * It contains host details [ip/dns of the broker]
+              * it contains port on which broker runs
+              * it contains default setting for topics created in the cluster
+              * it contains retention details
+              * It contains details of zookeeper server to register as broker
+              * It contains the path for kafka-data folder to store the kafka
+              topics and partition details
+
+
+For our setup, for three brokers we use three files
+
+ server1.properties
+ server2.properties
+ server3.properties
+-------------------------------------------------------------------
+
+
+Producer?
+
+     Topic is part of the cluster
+
+     Ther is only one Structure/Unit available in Kafka cluster
+     to hold messages ie., Topic
+
+     Kafka is Multi producer and Multi Consumer Model
+
+    *** At any Given instance , there can be one or more producers for a topic
+
+     Producer ? 
+        * it can be a microservice
+        * it can be from a program
+        * it can be through command
+        * it can be through api call 
+
+        Basically Summary is producer is a client to
+        kafka cluster that sends messages to topic
+
+    *** Producer information is not taken care or maintained by kafka cluster
+
+    *** Producers can produce messages in various formats
+    and we have to use appropriate serailizer to store the messages
+    and consumer when it reads it , it deserializer with appropriate
+    deserialize
+
+    *** Producers when producing message, to 
+    make the message handling efficient, they can
+    associate the message with a Partition Key
+
+     Partition Key -  Can be assumed as an unique identifier
+     for a group of messages
+           Partition key essentially doesnot need to be a number
+           it can be a string, object, json...
+
+topic:  greetmessages
+
+           production:"Hi How are you" ->partition 1
+           testing: "How do you do" -> partition 0
+           production: "Hi Hello" -> partition 1
+           development: "Hey!"->partition 1
+           testing: "Hello! How do you do" -> partition 0
+           in the above case, production is the partion key
+                       Hi, how are you is the message
+
+        Kafka ensures that  all the messages associated with a particular
+        partition key will be stored in the same partition
+    -------------------------------------------------------------------
+
+    
+    Kafka-
+
+         Distributed environment..fast and highly scalable environment
+
+         Topic - distributed across brokers
+
+                with the help of partitions and their replications
+
+                and messages would be stored in partitions
+
+
+                Goal: fast exchange messages/large scale of messages
+
+
+       MicroService <queue>---> {topic}-->{queue}->Microservice
+
+    
+
+    Acknowledgements?
+-------------------------
+
+    microservice -1 -> notification -> [topic] -> [Consumer] -> [All users 100000]
+
+    mircorservice -3 -> transaction notification -> topic -> consumer -> [appropriate User]
+      [Acknowledgment]
+
+if a message is created with a partition key (ex:  app23) for the first time
+
+   kafka might post the message to any of the available partitions , (example partition 0)
+
+from now on any message posted with key app23, will always get stored in partition 0
+
+it is a not rule that only one partition key might be associated with a partition, certainly there can be many partition 
+keys associated with a single partion
+
+Consumer
+--------
+
+Consumer consumes messages from a topic in order
+
+by default if we start a consumer, it will try
+to read only the new produced messages , it wont consume the
+older messages
+
+but you can always read messages from the beginning or 
+from particular offset or the latest
+
+
+c1,c2,c3-> topic [p1,p2,p3]
+
+Consumer if not dedicated explicitly to a partition it reads messages from all partitions
+
+Consumers can be explicitly made to read a particular partition
+
+Consumers if not explicitly specifying the group name still a seperate group will created
+for the consumer
+
+
+
+
+app24---> partition 0
+
+parellel processing?
+c1-> p1
+c2-> p2
+c3-> p3
+
+c1,c2 and c3 must belong to same consumer group
+
+
+
+Consumer FAQ?
+
+----------------
+
+A Topic can have as many consumers as you want
+
+A Consumer can be associated with more than one topic
+
+A Consumer group can also have only one consumer
+
+every consumer if not associated with group , still a group is created,
+   - in this case, if consumer goes inactive/dead the group will also go inactive
+
+
+There is no CLI command dedicated to list out  consumers or producers
+
+But for consumers you can read consumer group details
+
+when you describe group, you can find out list of consumers in that group
+
+
+
+----------------
+
+
+
+Consumers - [c1,c2,c3]
+             [host1,host2,host3]
+            group - firstgroup
+
+            partitions - [0,1,2]
+
+            c1-0  c2-1 c3-2
+
+            --offset is always with respect partition not with respect to topic
+
+
+            Consumer while created , you can dedicate it to read it from a particular
+            partition
+
+
+
+--------------------------------------------------------------------------
+Java
+------
+
+        * kakfa-clients
+                     
+                     * consumers
+                     * producers
+
+        * Kafka-streams
+
+
+   input-topic  ->   {kafka-streams}(program) ---> output-topic
+
+       kafka-stream program/service is meant to be
+       live and continously program
+
+* to process any kind of input-topic we dont need to think 
+in consumer perspective
+and similary to put the processed data into output-topic
+we dont need to think in producer 
+
+all we need to write is logic of the 
+transformation happening in the middle
+
+generally
+
+   map
+   filtering
+   reduce
+--------------------------------------------------------------
+
+Spring-boot
+-----------
+
+Spring-kafka
+
+   * Clients (Producers, Consumers)
+
+   * Streams (Kafka Streams)
+
+
+Kafka Producer with spring boot 
+
+      Producer Configuration - application.properties
+        if your app deals with a single producer configuration
+
+      if you want mulitiple configuration in case
+      if you want to multiple producers for various
+      cases, you have to go for java configuration.
+
+
+
+Serialization
+--------------
+
+if we are implementing producer
+by using core kafka-clients without using spring-kafka
+
+we need to give implementation for any custome
+serializer, jsonSerializer
+
+
+Example 1
+----------
+
+  Producer config ? - yes ( in properties file, java configuration)
+
+  kafka template - it follows producer config to create a producer
+
+
+  the producer created in the first examples
+  writes message to a topic with string,jsonSerializer format
+
+  the topic has three partitions...
+
+  the message might be written on any of the partitions
+  
+  
+Example 2
+---------
+
+Scenario
+----------
+
+   topic - tasks
+   partitions - 3 partitions - 0,1,2
+
+   business case - we have three projects
+      
+      erp, api and db
+
+  erp tasks in partition 0 - partition key - erp
+  api task in partition 1 - partition key - api
+  db task in partition 2 - partition key -  db
+
+  --------------------------------------------
+
+
+    
+    Consumers 
+    ------------
+
+      Same as producers , consumers can also be created
+      either by using properties in application.properties
+      or java configuration
+
+      Spring-Kakfa Uses a highly customized way of
+      dealing with consumers with a feature called KafkaListener
+
+      KafkaListener is continously running program
+      that receives message from Kafka Topic or topics
+
+      If kafka-client implementation?
+      --------------------------------
+    KafkaConsumer object -> you read
+      ConsumerRecord -> where consumer not only consumes the data,
+      but also captures the metadata about the message
+
+
+    -------------------------------------------------------------
+
+
+    Producer?
+
+       produced  -> person message -messages topic  with  sno->6
+
+       consumer- CLI? - consumer consumer but it is a different group
+
+
+    Consumer group - people group
+
+    currrent - no consumer is running in the group
+
+    history - people group consumer ran in the past and read messages
+    until offeset 5 that is message -  sno->5
+
+    Note: since there is only one consumer in the group
+    it reads message from all the partitions
+
+Now: when we instantiate a consumer in the group called people group
+
+it will started from the existing
+
+
+
+
