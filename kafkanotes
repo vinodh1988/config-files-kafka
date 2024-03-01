@@ -41,8 +41,7 @@ it is ready
         {orderid, name, price, invoice amt}  ->message system(kafka) --- {email service} (subscriber)-> {customer}
 
          {order service} (publisher)
-         {orderid,name,price,invoice amt} -> message System[Kafka](topic)->  (streaming-pipeline)  -> {topic}        ->(XML) 
-{order DB Service}->DB
+         {orderid,name,price,invoice amt} -> message System[Kafka](topic)->  (streaming-pipeline)  -> {topic}        ->(XML) {order DB Service}->DB
    
    ----------------------------------------------
 
@@ -370,8 +369,7 @@ if a message is created with a partition key (ex:  app23) for the first time
 
 from now on any message posted with key app23, will always get stored in partition 0
 
-it is a not rule that only one partition key might be associated with a partition, certainly there can be many partition 
-keys associated with a single partion
+it is a not rule that only one partition key might be associated with a partition, certainly there can be many partition keys associated with a single partion
 
 Consumer
 --------
@@ -597,4 +595,435 @@ it will started from the existing
 
 
 
+Consumer Example -2 
+------------------------
 
+
+Three consumers , that is three listeners is going to be created
+and all the listeners would be belonging to the same group
+
+Note: if you dont chose to read from a particular partion, kafka
+will allocate the partitions to the available consumers
+
+But in this scenerio we are explicitly going to specify which
+listener reads which partition, we are going to only the message
+but not the key
+
+
+
+In sync Replicas
+==================
+
+All replicas [partitions] essentially doesnot need to be in sync replicas
+
+In sync replicas  are the replicas are the replicas where the messages
+are immediatly written
+
+where as non ISRs  the messages are written eventually
+
+
+Producer Acks
+
+No Acknowledgement - [Availability of the message not assured]
+Acknowledging when written into leader - moderate level of availability assured
+Acknowledging when the message is written into all Isrs - highest level of availability assurance
+
+
+Kafka-connect
+--------------
+
+Kafka-connect is a plugin
+
+this plugin behaves as a mediator b/w a particular
+software/db/data system  and kafka topic[cluster]
+
+If this kafka-connect  reads data from external software
+and writes it to a topic, the plugin is consider
+as source
+
+if this kafka-connect reads data from topic and
+writeds it to the external software, in that case
+it is considered sink
+
+
+File connect 
+------------
+
+Source is text file
+
+connect will read data from the text as and when
+you write data
+
+the written data will be transferred to a topic
+
+
+Sink is also a text file
+
+Connect will read data from topic as and
+when data written into the topic
+
+it moves the data to the destination file
+
+KAFKA Connect - scenario
+--------------------------
+
+
+Problem
+--------
+
+  There is a mysql database
+
+  it has a db called sdb,  in which it has a table called transactions
+
+  we want to trace the transaction table and everytime
+  a record is written on to the table we want
+  to store that information in the form of json
+  into ta topic in the kafka cluster
+
+  it is tricky to track down and implement it by using
+  producer and jdbc combination because we may frequently
+  need to query the table to check the changes in the db
+
+  But the entire problem can be easily solved using kakfa jdbc connect
+
+
+  We can hava a  kafka jdbc connect plugin
+  and we can have a source configuration
+  and topic to store the messages and run the kafka connect
+
+
+  Kafka-Streams
+  --------------
+
+  Kakfa Streams
+
+  usually here we build a pipeline with defined
+  structure by specify source and desitination topics
+
+
+  Scenario1: 
+  
+  we create a stream that process
+  1 input topic 
+  and in the kafka table
+
+  kafka table: it  is a record of
+  key value pairs that is read from source
+  and processed and ready to be streamed
+
+  streamed table will be usually written
+  to destination topic
+
+
+  example:
+
+  we are going to read a source topic
+  as and when a message produced
+  and it will create a partition key and value
+  and writes it to the desition topic
+
+  here partition key is word and values is count of number of occurance
+
+
+  example;
+
+input topic: sourcetopic
+
+java is good language
+
+
+after process the kafka table will produce message with key and value as
+
+java 1
+is 1
+good 1
+language 1
+
+if second message is pushed
+
+java is a object oriented
+
+
+java 2
+is 2
+a 1
+object 1
+oriented 1
+
+
+We need to maintain a streaming Config that contains
+the details about the application name, broker details
+plus key and value serialization/deserialization configuration
+
+and the structure of the stream process -> topology
+
+Usual Stream/collection operations
+-----------------------------------
+
+
+Map
+
+   each item is processed and an output for each item is produced
+
+    for n input -> there will ne outputs
+
+    When to use: when you want to transform an income object
+   
+FlatMap
+
+    each item is may further decomposed and might be producing
+    a collecion/stream of values
+
+    for n input-> there might n + x outputs
+
+if an input record is say
+   india is in asia ---> india, is, in,asia
+
+
+
+Reduce
+
+     for aggregation operations, we usually use a reduce
+
+     we usually send two inputs 
+
+     current value, result of last iteration  and produce finally
+     only one output
+
+
+
+Filter
+
+    for n inputs
+    we might having a predicate logic
+    we filter out records that match the predicate logic
+
+-----------------------------------
+
+
+
+explaination of the topology of problem 1
+------------------------------------------
+
+
+input is  no key, value
+
+value---> flatten it
+
+example
+----------
+
+java is a language ->
+
+  nokey java
+  nokey is
+  nokey a 
+  nokey language
+
+  After flattening, we group it based on value
+
+  then we count the occurances
+  and redirect stream to destination topic
+
+
+Problem2
+
+-------------
+
+A kafka source topic -> that receives log messages
+
+
+kafka stream process - receives the message
+            checks for the words in the messages for suspicious activity
+            moves the suspicios message to
+
+A Kafka destination topic - that receives only suspicious message
+
+
+  Note:
+  ------
+
+  When we run for the first time, right from first
+  message all the existing message will be process
+  and stream will be running and waiting for new
+  message to proces
+
+  in case if the stream is stopped and restarted
+  with the same application id
+
+  the stream will continue reading from the last message
+  thats read 
+
+  how? -- internally kafka stream creates consumer
+  to consume the message and a consumer group with app name
+  is created and consumer offset is maintained
+
+  ------------------------------------------------------------------
+
+  Problem
+  ------------
+
+
+       Users post reviews on products
+
+       the product review by an user will posted to kafka topic
+
+       based on the product id we would want to aggregate the
+       rating and store the results in a destination topic
+       
+       may be from the destination topic the applications
+       might be consuming the data live and produce live dashboards 
+
+       the whole activity need to be  a streaming live activity
+
+
+       in this case
+source:
+       the incoming message will have both key and json object
+
+key: productid
+       jsonobject : review object represented in json structure
+
+
+Destination:
+       the processed data will produce a result with key and value
+
+        key: productid
+        double: the aggregate value of rating of the product id
+
+
+
+KAFKA GUI tools
+-----------------
+
+Kafka Streams
+---------------
+
+Scenario4
+----------
+
+Two Different topics
+
+Having same kind of keys? (logically same keys)
+
+Values? - can be of different SERDE types
+
+
+topic1 - string, review
+topic2 - string, sales
+
+kafka stream processing - string, review, sales
+
+restult topic  - string, resultmodel (review joined with sales object)
+
+simple example as case study
+
+
+KafkaStream?
+
+       a stream will process the message if and only if
+       there is an incoming message into the source topic
+
+       in case of left outer join
+
+       all the entries of left topic
+       regardless of match with the right topic
+       will be processed and stored
+
+       all the right topics need to have
+       a match withe latest left topic
+       entry for join operation
+
+       -------------------------------------------
+
+
+       in case of equi joins
+
+       say there are twon input topics
+
+       left topic produces a message with key - key123
+
+       it cannot be processed straight way because
+       there must be an equivalent message with the same key coming
+       in right topic
+
+       we must have a time duration to look for a message
+       coming into the right topic with same key [ex duration: 5 min, 10 min]
+
+       for example within 5 min, if we get a message in
+       right topic with key key123
+
+       for example : left topic key123: "rahul"
+                after 2 min: right topic key123: "Rajesh"
+
+                key123 : "rahul Rajesh" ->destination topic
+        
+                
+
+   --------------------------------------
+
+
+   in some cluster environment
+
+   the individual brokers might
+   be distributed in different geo locations
+   as a result the latency might increase
+
+   broker to broker communication might demand more
+   time
+
+   and some brokers may be closely placed
+
+   if the partition allocation are across
+   the brokers that are placed in different locations
+   that impacts the latency 
+
+   we can explicilty re allocate the partitions
+   to closely placed brokers by recommending the brokers
+   for the partition for a given topic
+
+   this can be achieved by acheiving a tool called
+   kafka-reassign-partitions
+
+   and similary if a leader replica is
+   not easily reachable and isrs are also placed
+   in such way that they are not close
+   it impacts the over all performance
+   
+   in such cases you can explicitly  trigger
+   leader election by recommending leader partitions
+   in particular broker
+
+   Note: Partition reallocation automatically
+   trigger re election
+
+   Broker election
+   --------------
+
+   Leader replicaa Partition -> on a particular broker
+
+   Follower replicae partitions -> particular broker
+
+   each follower replicat partititions sends a heart beat to leader replice
+   frequently witihin the timeout they need to get acknowledgment from the leader
+
+   if a heartbeat is not getting a response, it suggests there is no leader
+   partition for the topic
+
+   remember if there is no leader partition read and write operations will fail
+
+    typical error, leader relica partition is not yet ready
+
+    the follower will trigger election and it will announce itself as the candidate
+
+
+    Kafka cluster?
+
+    ---------------
+
+    Kafka raft Cluster
+
+   ====================
+
+
+      

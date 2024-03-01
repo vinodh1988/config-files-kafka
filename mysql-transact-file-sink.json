@@ -1,0 +1,12 @@
+
+{
+  "name": "file-sink-json",
+  "config": {
+    "connector.class": "org.apache.kafka.connect.file.FileStreamSinkConnector",
+    "tasks.max": "1",
+    "topics": "mysql-transaction",
+    "file": "/Users/vinodh/projects/transactdata.txt",
+    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter"
+  }
+}
